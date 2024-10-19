@@ -1,0 +1,21 @@
+# Create telegram-bots namespace
+- name: Create telegram-bots k8s namespace
+  kubernetes.core.k8s:
+    name: telegram-bots
+    api_version: v1
+    kind: Namespace
+    state: present
+  tags:
+    - telegram-bots
+    - never
+
+# Delete telegram-bots namespace
+- name: Delete telegram-bots k8s namespace
+  kubernetes.core.k8s:
+    name: telegram-bots
+    api_version: v1
+    kind: Namespace
+    state: absent
+  tags:
+    - telegram-bots-destroy
+    - never

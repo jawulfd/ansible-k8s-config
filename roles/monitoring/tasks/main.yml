@@ -1,0 +1,62 @@
+- name: Add stable chart repo
+  kubernetes.core.helm_repository:
+    name: stable
+    repo_url: "https://charts.helm.sh/stable"
+  tags:
+    - monitoring
+    - never
+
+- name: Add prometheus-community chart repo
+  kubernetes.core.helm_repository:
+    name: prometheus-community
+    repo_url: "https://prometheus-community.github.io/helm-charts"
+  tags:
+    - monitoring
+    - never
+
+- name: Deploy Prometheus stack inside monitoring namespace (and create it)
+  kubernetes.core.helm:
+    name: monitoring
+    chart_ref: prometheus-community/kube-prometheus-stack
+    chart_version: "{{ monitoring_kube_prometheus_version }}"
+    release_namespace: "{{ monitoring_namespace }}"
+    create_namespace: true
+    wait: true
+  tags:
+    - monitoring
+    - never
+
+- name: Fail on validation errors
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('file', item) | from_yaml_all }}"
+    namespace: "{{ monitoring_namespace }}"
+    wait: true
+    validate:
+      fail_on_error: true
+      strict: true
+  with_fileglob:
+    - ingress-*.yaml
+  tags:
+    - monitoring
+    - never
+
+- name: Remove monitoring helm release and waiting suppression ending
+  kubernetes.core.helm:
+    name: monitoring
+    state: absent
+    release_namespace: "{{ monitoring_namespace }}"
+    wait: true
+  tags:
+    - monitoring-destroy
+    - never
+
+- name: Delete monitoring k8s namespace
+  kubernetes.core.k8s:
+    name: "{{ monitoring_namespace }}"
+    api_version: v1
+    kind: Namespace
+    state: absent
+  tags:
+    - monitoring-destroy
+    - never

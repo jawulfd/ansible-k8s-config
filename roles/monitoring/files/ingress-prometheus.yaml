@@ -1,0 +1,15 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: ingress-prometheus
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`prometheus.testing.com`)
+      priority: 10
+      services:
+        - name: monitoring-kube-prometheus-prometheus
+          port: http-web
+  tls: {}

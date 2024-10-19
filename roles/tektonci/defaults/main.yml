@@ -1,0 +1,6 @@
+---
+tektonci_pipelines_manifests_url: "https://storage.googleapis.com/tekton-releases/pipeline/previous/v0.54.0/release.yaml"
+tektonci_dashboard_manifests_url: "https://storage.googleapis.com/tekton-releases/dashboard/previous/v0.42.0/release.yaml"
+tektonci_triggers_manifests_url: "https://storage.googleapis.com/tekton-releases/triggers/previous/v0.25.3/release.yaml"
+tektonci_interceptors_manifests_url: "https://storage.googleapis.com/tekton-releases/triggers/previous/v0.25.3/interceptors.yaml"
+tektonci_namespace: tekton-pipelines

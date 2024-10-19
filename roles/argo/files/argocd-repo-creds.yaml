@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: argoproj-https-creds
+  labels:
+    argocd.argoproj.io/secret-type: repo-creds
+stringData:
+  url: "https://gitlab.com/portfolio7771842"
+  username: "username"
+  password: "<gitlab-token>"

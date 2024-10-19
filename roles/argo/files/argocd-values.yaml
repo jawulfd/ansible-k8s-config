@@ -1,0 +1,8 @@
+global:
+  domain: argocd.jauwlfd.com
+
+configs:
+  params:
+    "server.insecure": true
+    "server.rootpath": ''
+  addPrometheusAnnotations: true

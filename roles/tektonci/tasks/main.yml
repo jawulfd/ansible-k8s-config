@@ -1,0 +1,125 @@
+# Create tekton namespace
+- name: Create tekton k8s namespace
+  kubernetes.core.k8s:
+    name: "{{ tekton_namespace }}"
+    api_version: v1
+    kind: Namespace
+    state: present
+  tags:
+    - tektonci
+    - never
+
+# Apply tekton pipelines manifest from url
+- name: Apply tekton pipelines manifest to the cluster.
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ tekton_namespace }}"
+    src: "{{ tekton_pipelines_manifests_url }}"
+    wait: true
+  tags:
+    - tektonci
+    - never
+
+# Apply tekton triggers manifest from url
+- name: Apply tekton triggers manifest to the cluster.
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ tekton_namespace }}"
+    src: "{{ tekton_triggers_manifests_url }}"
+    wait: true
+  tags:
+    - tektonci
+    - never
+
+# Apply tekton interceptors manifest from url
+- name: Apply tekton interceptors manifest to the cluster.
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ tekton_namespace }}"
+    src: "{{ tekton_interceptors_manifests_url }}"
+    wait: true
+  tags:
+    - tektonci
+    - never
+
+# Apply tekton dashboard manifest from url
+- name: Apply tekton dashboard manifest to the cluster.
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ tekton_namespace }}"
+    src: "{{ tekton_dashboard_manifests_url }}"
+    wait: true
+  tags:
+    - tektonci
+    - never
+
+- name: Fail on validation errors
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('file', item) | from_yaml_all }}"
+    namespace: "{{ tekton_namespace }}"
+    wait: true
+    validate:
+      fail_on_error: true
+      strict: true
+  with_fileglob:
+    - tektonci-ingress.yaml
+    - liquibase/*.yaml
+  tags:
+    - tektonci
+    - never
+
+# Remove tekton dashboard manifest
+- name: Remove tekton dashboard manifest from the cluster.
+  kubernetes.core.k8s:
+    state: absent
+    namespace: "{{ tekton_namespace }}"
+    src: "{{ tekton_dashboard_manifests_url }}"
+    wait: true
+  tags:
+    - tektonci-destroy
+    - never
+
+# Remove tekton interceptors manifest
+- name: Remove tekton interceptors manifest from the cluster.
+  kubernetes.core.k8s:
+    state: absent
+    namespace: "{{ tekton_namespace }}"
+    src: "{{ tekton_interceptors_manifests_url }}"
+    wait: true
+  tags:
+    - tektonci-destroy
+    - never
+
+# Remove tekton triggers manifest
+- name: Remove tekton triggers manifest from the cluster.
+  kubernetes.core.k8s:
+    state: absent
+    namespace: "{{ tekton_namespace }}"
+    src: "{{ tekton_triggers_manifests_url }}"
+    wait: true
+  tags:
+    - tektonci-destroy
+    - never
+
+# Remove tekton pipelines manifest
+- name: Remove tekton pipelines manifest from the cluster.
+  kubernetes.core.k8s:
+    state: absent
+    namespace: "{{ tekton_namespace }}"
+    src: "{{ tekton_pipelines_manifests_url }}"
+    wait: true
+  tags:
+    - tektonci-destroy
+    - never
+
+# Delete tekton namespace
+- name: Delete tekton k8s namespace
+  kubernetes.core.k8s:
+    name: "{{ tekton_namespace }}"
+    api_version: v1
+    kind: Namespace
+    state: absent
+  tags:
+    - tektonci-destroy
+    - never

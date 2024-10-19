@@ -1,0 +1,58 @@
+# Create cert-manager namespace
+- name: Create cert-manager k8s namespace
+  kubernetes.core.k8s:
+    name: "{{ cert_manager_namespace }}"
+    api_version: v1
+    kind: Namespace
+    state: present
+  tags:
+    - cert-manager
+    - never
+
+# Apply manifest from url
+- name: Apply cert-manager manifest to the cluster.
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ cert_manager_namespace }}"
+    src: "{{ cert_manager_manifests_url }}"
+    wait: true
+  tags:
+    - cert-manager
+    - never
+
+- name: Fail on validation errors
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('file', item) | from_yaml_all }}"
+    namespace: "{{ cert_manager_namespace }}"
+    wait: true
+    validate:
+      fail_on_error: true
+      strict: true
+  with_fileglob:
+    - cert-manager-cluster-issuer-*.yaml
+  tags:
+    - cert-manager
+    - never
+
+# Remove cert-manager manifest
+- name: Remove cert-manager manifest from the cluster.
+  kubernetes.core.k8s:
+    state: absent
+    namespace: "{{ cert_manager_namespace }}"
+    src: "{{ cert_manager_manifests_url }}"
+    wait: true
+  tags:
+    - cert-manager-destroy
+    - never
+
+# Delete cert-manager namespace
+- name: Delete cert-manager k8s namespace
+  kubernetes.core.k8s:
+    name: "{{ cert_manager_namespace }}"
+    api_version: v1
+    kind: Namespace
+    state: absent
+  tags:
+    - cert-manager-destroy
+    - never

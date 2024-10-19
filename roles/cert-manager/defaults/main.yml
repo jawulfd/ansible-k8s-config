@@ -1,0 +1,3 @@
+---
+cert_manager_manifests_url: "https://github.com/cert-manager/cert-manager/releases/download/v1.13.2/cert-manager.yaml"
+cert_manager_namespace: "cert-manager"

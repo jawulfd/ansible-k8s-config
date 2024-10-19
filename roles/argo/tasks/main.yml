@@ -1,0 +1,133 @@
+- name: Add argo chart repo
+  kubernetes.core.helm_repository:
+    name: argo-community
+    repo_url: "https://argoproj.github.io/argo-helm"
+  tags:
+    - argo
+    - argo-cd
+    - argo-workflows
+    - argo-events
+    - never
+
+- name: Deploy Argo CD stack inside argocd namespace (and create it)
+  kubernetes.core.helm:
+    name: "argo-cd"
+    chart_ref: argo-community/argo-cd
+    chart_version: "{{ argo_cd_chart_version }}"
+    release_namespace: "{{ argo_namespace }}"
+    create_namespace: true
+    wait: true
+    values: "{{ lookup('file', 'argocd-values.yaml') | from_yaml }}"
+  tags:
+    - argo
+    - argo-cd
+    - never
+
+- name: Argo CD Resources
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('file', item) | from_yaml_all }}"
+    namespace: "{{ argo_namespace }}"
+    wait: true
+    validate:
+      fail_on_error: true
+      strict: true
+  with_fileglob:
+    - argocd-ingress.yaml
+    - argocd-repo-creds.yaml
+    - argocd-repositories-*.yaml
+    - argocd-project-*.yaml
+    - argocd-applications.yaml
+  tags:
+    - argo
+    - argo-cd
+    - never
+
+- name: Deploy Argo Events stack inside argo namespace (and create it)
+  kubernetes.core.helm:
+    name: "argo-events"
+    chart_ref: argo-community/argo-events
+    chart_version: "{{ argo_events_chart_version }}"
+    release_namespace: "{{ argo_namespace }}"
+    create_namespace: true
+    wait: true
+  tags:
+    - argo
+    - argo-events
+    - never
+
+- name: Deploy Argo Workflows stack inside argo namespace (and create it)
+  kubernetes.core.helm:
+    name: "argo-workflows"
+    chart_ref: argo-community/argo-workflows
+    chart_version: "{{ argo_workflows_chart_version }}"
+    release_namespace: "{{ argo_namespace }}"
+    create_namespace: true
+    wait: true
+    values: "{{ lookup('file', 'argoworkflows-values.yaml') | from_yaml }}"
+  tags:
+    - argo
+    - argo-workflows
+    - never
+
+- name: Argo Workflows Resources
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('file', item) | from_yaml_all }}"
+    namespace: "{{ argo_namespace }}"
+    wait: true
+    validate:
+      fail_on_error: true
+      strict: true
+  with_fileglob:
+    - argoworkflows-middleware.yaml
+    - argoworkflows-ingress.yaml
+    - argoworkflows-repo-*.yaml
+  tags:
+    - argo
+    - argo-workflows
+    - never
+
+- name: Remove Argo CD helm release and waiting suppression ending
+  kubernetes.core.helm:
+    name: "argo-cd"
+    state: absent
+    release_namespace: "{{ argo_namespace }}"
+    wait: true
+  tags:
+    - argo-destroy
+    - argo-cd-destroy
+    - never
+
+- name: Remove Argo Events helm release and waiting suppression ending
+  kubernetes.core.helm:
+    name: "argo-events"
+    state: absent
+    release_namespace: "{{ argo_namespace }}"
+    wait: true
+  tags:
+    - argo-destroy
+    - argo-events-destroy
+    - never
+
+- name: Remove Argo Workflows helm release and waiting suppression ending
+  kubernetes.core.helm:
+    name: "argo-workflows"
+    state: absent
+    release_namespace: "{{ argo_namespace }}"
+    wait: true
+  tags:
+    - argo-destroy
+    - argo-workflows-destroy
+    - never
+
+# Delete argocd namespace
+- name: Delete argocd k8s namespace
+  kubernetes.core.k8s:
+    name: "{{ argo_namespace }}"
+    api_version: v1
+    kind: Namespace
+    state: absent
+  tags:
+    - argo-destroy
+    - never
